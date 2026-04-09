@@ -1,0 +1,7 @@
+{
+  "name": "CCH - Centro Control Hitos",
+  "description": "A comprehensive flight operation milestone management system for LATAM airline agents, featuring real-time tracking, supervisor task assignment, and operational KPIs.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

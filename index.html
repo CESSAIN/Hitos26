@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CCH - Centro Control Hitos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f3f6f9; /* Fondo corporativo */
+        color: #1b2e91; /* Azul LATAM */
+      }
+      .latam-blue { color: #1b2e91; }
+      .bg-latam-blue { background-color: #1b2e91; }
+      .latam-pink { color: #eb0045; }
+      .bg-latam-pink { background-color: #eb0045; }
+      .latam-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+      
+      .ai-analysis-content h1, .ai-analysis-content h2, .ai-analysis-content h3 {
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
+        color: #1b2e91;
+      }
+      .ai-analysis-content p { margin-bottom: 0.75rem; }
+      .ai-analysis-content ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
+      .ai-analysis-content li { margin-bottom: 0.25rem; }
+      .ai-analysis-content strong { font-weight: 800; color: #1b2e91; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "recharts": "https://esm.sh/recharts@^3.6.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-[#f3f6f9]">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
