@@ -520,17 +520,15 @@ const App: React.FC = () => {
           {activeTab === 'panel' && (
             <PanelOperativo 
               flights={filteredFlights} 
-              selectedDate={globalSelectedDate}
-              dateFilter={globalDateFilter}
             />
           )}
           {activeTab === 'kpis' && (
             <KPIs 
               flights={filteredFlights} 
-              agents={agents}
+              agents={agentsList}
               assignments={assignments}
-              selectedDate={globalSelectedDate}
-              dateFilter={globalDateFilter}
+              selectedDate={new Date(globalSelectedDate)}
+              dateFilter={globalDateFilter === 'all' ? 'month' : 'day'}
             />
           )}
           {activeTab === 'reglas' && <Reglas />}

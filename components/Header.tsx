@@ -188,7 +188,7 @@ const Header: React.FC<HeaderProps> = ({
                   className="bg-transparent text-[11px] font-black outline-none text-[#1b2e91] cursor-pointer uppercase leading-none"
                 >
                   <option value="">Todos los Países</option>
-                  {countries.map(c => <option key={c} value={c}>{COUNTRIES[c as keyof typeof COUNTRIES] || c}</option>)}
+                  {countries.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
             </div>
