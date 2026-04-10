@@ -1,15 +1,16 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"; // Corregida la importación
+import { GoogleGenerativeAI } from "@google/genai";
 import { Flight } from "../../types";
 import { MILESTONES } from "../../constants";
 
-// CONFIGURACIÓN CORRECTA PARA VITE + GITHUB ACTIONS
+// CONFIGURACIÓN PARA VITE + GITHUB ACTIONS
+// Esta línea conecta con la llave secreta que pusiste en GitHub
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis: string; isPositive: boolean }> {
-  // Usamos el modelo estable para evitar errores de preview
+  // Inicializamos el modelo (Gemini 1.5 Flash es el más estable para web)
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   
-  const milestones = MILESTONES.filter(m => !m.isTheoretical);
+  // Preparamos los datos del vuelo para que la IA los entienda
   const dataForAI = {
     flightNumber: flight.number,
     registration: flight.registration,
@@ -36,15 +37,14 @@ export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis
     Analiza la operación del vuelo ${flight.number} (${flight.registration}) con los siguientes datos:
     ${JSON.stringify(dataForAI, null, 2)}
 
-    Instrucciones específicas para el análisis:
+    Instrucciones:
     1. Compara los tiempos teóricos vs reales de cada hito.
-    2. Identifica quiebres de procesos (donde el real excedió significativamente al teórico).
-    3. Calcula el tiempo total utilizado entre el IN (${dataForAI.inBlock}) y el PUSH BACK (${dataForAI.pushBack}).
-    4. Compara ese tiempo total con el TAT teórico (${flight.tatTeorico}).
-    5. Revisa si hubo "tiempos vacíos" (gaps) entre hitos donde no se realizó ninguna tarea.
-    6. REGLA ESPECIAL: El proceso de limpieza puede empezar hasta 2 minutos tarde sin ser considerado un quiebre si logra terminar a tiempo comparado con su teórico final.
-    7. Determina si el análisis general es POSITIVO o NEGATIVO.
-    8. La respuesta debe ser UNICAMENTE un JSON con dos campos: "analysis" (string en markdown) y "isPositive" (boolean).
+    2. Identifica quiebres de procesos.
+    3. Determina si el análisis general es POSITIVO o NEGATIVO.
+    4. El tono debe ser profesional y directo.
+    5. Responde ÚNICAMENTE con un objeto JSON que tenga estos dos campos:
+       "analysis": (un string con formato markdown)
+       "isPositive": (un booleano true o false)
   `;
 
   try {
@@ -52,13 +52,13 @@ export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis
     const response = await result.response;
     const text = response.text();
     
-    // Limpiamos el texto por si la IA devuelve markdown (```json ... ```)
+    // Limpieza de seguridad por si la IA devuelve bloques de código markdown
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(cleanJson);
   } catch (error) {
     console.error("AI Analysis Error:", error);
     return {
-      analysis: "Análisis no disponible: revisa la conexión o la configuración de la API Key.",
+      analysis: "El análisis de IA no está disponible en este momento. Verifica la configuración de la API Key.",
       isPositive: false
     };
   }
