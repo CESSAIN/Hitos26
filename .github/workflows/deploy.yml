@@ -28,7 +28,7 @@ jobs:
       - name: Build project
         run: npm run build
         env:
-          # Esto conecta con el secreto que creamos en Settings
+          # Es vital que este nombre coincida con el de tus "Secrets" en GitHub
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
           
       - name: Upload artifact
