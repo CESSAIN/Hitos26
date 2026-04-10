@@ -1,14 +1,14 @@
-
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai"; // Corregida la importación
 import { Flight } from "../../types";
 import { MILESTONES } from "../../constants";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// CONFIGURACIÓN CORRECTA PARA VITE + GITHUB ACTIONS
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis: string; isPositive: boolean }> {
-  const model = "gemini-3.1-pro-preview";
+  // Usamos el modelo estable para evitar errores de preview
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   
-  // Prepare data for the prompt
   const milestones = MILESTONES.filter(m => !m.isTheoretical);
   const dataForAI = {
     flightNumber: flight.number,
@@ -43,28 +43,22 @@ export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis
     4. Compara ese tiempo total con el TAT teórico (${flight.tatTeorico}).
     5. Revisa si hubo "tiempos vacíos" (gaps) entre hitos donde no se realizó ninguna tarea.
     6. REGLA ESPECIAL: El proceso de limpieza puede empezar hasta 2 minutos tarde sin ser considerado un quiebre si logra terminar a tiempo comparado con su teórico final.
-    7. Determina si el análisis general es POSITIVO (operación eficiente o recuperada) o NEGATIVO (demora impactante o ineficiencia grave).
-    8. El tono debe ser profesional, directo y constructivo.
-    9. La respuesta debe ser en formato JSON con dos campos: "analysis" (string en markdown) y "isPositive" (boolean).
-
-    No incluyas explicaciones fuera del JSON.
+    7. Determina si el análisis general es POSITIVO o NEGATIVO.
+    8. La respuesta debe ser UNICAMENTE un JSON con dos campos: "analysis" (string en markdown) y "isPositive" (boolean).
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json"
-      }
-    });
-
-    const result = JSON.parse(response.text || '{"analysis": "Error al generar análisis", "isPositive": false}');
-    return result;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Limpiamos el texto por si la IA devuelve markdown (```json ... ```)
+    const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    return JSON.parse(cleanJson);
   } catch (error) {
     console.error("AI Analysis Error:", error);
     return {
-      analysis: "No se pudo realizar el análisis de IA en este momento debido a un error de conexión.",
+      analysis: "Análisis no disponible: revisa la conexión o la configuración de la API Key.",
       isPositive: false
     };
   }
