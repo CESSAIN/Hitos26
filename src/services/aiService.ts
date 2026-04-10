@@ -2,11 +2,12 @@ import { GoogleGenerativeAI } from "@google/genai";
 import { Flight } from "../../types";
 import { MILESTONES } from "../../constants";
 
-// Conexión con la llave secreta de GitHub
+// CONFIGURACIÓN DE SEGURIDAD
+// No ponemos la llave aquí directamente; la traemos de las variables de entorno
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis: string; isPositive: boolean }> {
-  // Inicializamos el modelo estable
+  // Inicializamos el modelo (Gemini 1.5 Flash es ideal por su velocidad)
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   
   const dataForAI = {
@@ -31,13 +32,15 @@ export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis
   };
 
   const prompt = `
-    Eres un experto en operaciones aeroportuarias. Analiza el vuelo ${flight.number}.
-    Datos: ${JSON.stringify(dataForAI)}
-    
-    Instrucciones:
-    1. Compara teóricos vs reales.
-    2. Determina si el análisis es POSITIVO o NEGATIVO.
-    3. Responde ÚNICAMENTE con un JSON: {"analysis": "markdown string", "isPositive": boolean}.
+    Eres un experto en operaciones aeroportuarias. Analiza el vuelo ${flight.number} (${flight.registration}).
+    Datos de operación: ${JSON.stringify(dataForAI, null, 2)}
+
+    Tareas:
+    1. Compara tiempos teóricos vs reales.
+    2. Identifica demoras o procesos eficientes.
+    3. Responde ÚNICAMENTE con un objeto JSON que tenga:
+       - "analysis": un texto en formato markdown con el resumen.
+       - "isPositive": un booleano (true si la operación fue buena, false si hubo problemas graves).
   `;
 
   try {
@@ -45,13 +48,13 @@ export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis
     const response = await result.response;
     const text = response.text();
     
-    // Limpieza de formato JSON
+    // Limpiamos la respuesta por si la IA devuelve bloques de código markdown
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(cleanJson);
   } catch (error) {
     console.error("AI Analysis Error:", error);
     return {
-      analysis: "El análisis de IA no está disponible. Revisa la consola para más detalles.",
+      analysis: "Análisis no disponible en este momento. Revisa la configuración de la API Key.",
       isPositive: false
     };
   }
