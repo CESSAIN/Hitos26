@@ -2,45 +2,38 @@ import { GoogleGenerativeAI } from "@google/genai";
 import { Flight } from "../../types";
 import { MILESTONES } from "../../constants";
 
-// CONFIGURACIÓN DE SEGURIDAD
-// No ponemos la llave aquí directamente; la traemos de las variables de entorno
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+// Capturamos la llave desde las variables de entorno de Vite
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis: string; isPositive: boolean }> {
-  // Inicializamos el modelo (Gemini 1.5 Flash es ideal por su velocidad)
+  // Verificación de seguridad: si no hay llave, avisamos en el análisis en lugar de romper la app
+  if (!apiKey) {
+    return {
+      analysis: "Configuración incompleta: No se detectó la VITE_GEMINI_API_KEY. Verifica los Secrets de GitHub.",
+      isPositive: false
+    };
+  }
+
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   
   const dataForAI = {
     flightNumber: flight.number,
     registration: flight.registration,
-    type: flight.type,
     origin: flight.origin,
     destination: flight.destination,
-    tatTeorico: flight.tatTeorico,
-    etdReal: flight.etdReal,
-    inBlock: flight.inBlock || flight.milestones['IN'],
-    pushBack: flight.milestones['PUSH BACK'],
-    milestones: Object.entries(flight.milestones).map(([key, value]) => {
-      const mDef = MILESTONES.find(m => m.key === key);
-      return {
-        key,
-        label: mDef?.label || key,
-        value,
-        isTheoretical: mDef?.isTheoretical || false
-      };
-    })
+    milestones: flight.milestones
   };
 
   const prompt = `
-    Eres un experto en operaciones aeroportuarias. Analiza el vuelo ${flight.number} (${flight.registration}).
-    Datos de operación: ${JSON.stringify(dataForAI, null, 2)}
-
-    Tareas:
-    1. Compara tiempos teóricos vs reales.
-    2. Identifica demoras o procesos eficientes.
-    3. Responde ÚNICAMENTE con un objeto JSON que tenga:
-       - "analysis": un texto en formato markdown con el resumen.
-       - "isPositive": un booleano (true si la operación fue buena, false si hubo problemas graves).
+    Eres un experto en operaciones aeroportuarias. 
+    Analiza este vuelo: ${JSON.stringify(dataForAI, null, 2)}
+    
+    Responde ÚNICAMENTE en formato JSON con estos campos:
+    {
+      "analysis": "string con formato markdown",
+      "isPositive": booleano
+    }
   `;
 
   try {
@@ -48,13 +41,13 @@ export async function analyzeFlightOperation(flight: Flight): Promise<{ analysis
     const response = await result.response;
     const text = response.text();
     
-    // Limpiamos la respuesta por si la IA devuelve bloques de código markdown
+    // Limpiamos posibles etiquetas de código markdown que devuelva la IA
     const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(cleanJson);
   } catch (error) {
-    console.error("AI Analysis Error:", error);
+    console.error("Error en el análisis de IA:", error);
     return {
-      analysis: "Análisis no disponible en este momento. Revisa la configuración de la API Key.",
+      analysis: "No se pudo generar el análisis en este momento. Intenta de nuevo más tarde.",
       isPositive: false
     };
   }
